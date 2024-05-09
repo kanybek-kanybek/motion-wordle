@@ -1,0 +1,40 @@
+body {
+    background: black;
+}
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+.block {
+    text-align: center;
+    align-items: center;
+    background: #fff;
+    height: 800px;
+    margin-top: 200px;
+    border-radius: 5px;
+    padding: 20px;
+}
+.block__content {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+.block__content__inputs input {
+    width: 90px;
+    height: 90px;
+    border: 7px solid #908d8d;
+    border-radius: 12px;
+    display: flex;
+    margin: 10px;
+    margin-bottom: 30px;
+    font-size: 60px;
+    text-align: center;
+    background: #c9c7c7;
+}
+.block__title {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+.block__title p {
+    font-size: 30px;
+}
