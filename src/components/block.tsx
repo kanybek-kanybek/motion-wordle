@@ -1,6 +1,24 @@
-import React from "react";
-
 import "../components/block.css";
+
+const API_URL = "https://piccolo-server.vercel.app/words";
+
+fetch(API_URL)
+    .then((response) => {
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    })
+    .then((data) => {
+        const outputElement = document.createElement("h1");
+        outputElement.textContent = JSON.stringify(data);
+
+        document.body.appendChild(outputElement);
+    })
+    .catch((error) => {
+        console.error(error.find(() => error.data));
+    });
+
 function Block() {
     return (
         <>
