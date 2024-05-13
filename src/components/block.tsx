@@ -10,13 +10,14 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
     const firstFiveTiles = tiles.slice(0, 25);
     const [work, setWork] = useState("");
 
-    // console.log(onTileChange);
-    // function Handler(tiles:string) {
-    //     if(tiles === ) {
-
-    //     }
-    // }
-    console.log(work);
+    function handleSave() {
+        if (firstFiveTiles.includes(work)) {
+            alert("TRUE");
+        } else {
+            alert("FOALSE");
+        }
+    }
+    console.log(firstFiveTiles);
 
     return (
         <div id="cube">
@@ -31,10 +32,19 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
                         paddingLeft: "10px",
                     }}
                     type="text"
-                    placeholder="text"
                     value={work}
                     onChange={(e) => setWork(e.target.value)}
                 />
+                <button
+                    style={{
+                        padding: "18px 40px",
+                        borderRadius: "15px",
+                        marginLeft: "20px",
+                    }}
+                    onClick={handleSave}
+                >
+                    Save
+                </button>
                 <div className="block">
                     <div className="block__content">
                         <div className="block__content__inputs">
