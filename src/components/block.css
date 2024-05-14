@@ -1,5 +1,5 @@
 body {
-    background: black;
+    background: rgb(212, 204, 204);
 }
 .container {
     max-width: 700px;
@@ -9,33 +9,32 @@ body {
     text-align: center;
     align-items: center;
     background: #fff;
-    height: 800px;
+    height: 750px;
     margin-top: 200px;
     border-radius: 5px;
     padding: 20px;
+    padding-top: 35px;
 }
 .block__content {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    display: flex;
 }
 .block__content__inputs input {
     width: 90px;
     height: 90px;
     border: 7px solid #908d8d;
     border-radius: 12px;
-    display: flex;
     margin: 10px;
-    margin-bottom: 30px;
+    margin-bottom: 12px;
     font-size: 60px;
     text-align: center;
     background: #c9c7c7;
 }
-.block__title {
+.wordle__text {
     display: flex;
     justify-content: space-between;
     padding: 20px;
 }
-.block__title p {
+.wordle__text p {
     font-size: 30px;
     color: black;
 }
