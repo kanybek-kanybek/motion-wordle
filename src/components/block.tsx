@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
-import "./block.css";
-
+import "../components/block.css";
 interface BoardProps {
     tiles: string[];
     onTileChange: (index: number, value: string) => void;
@@ -22,6 +21,9 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
     const [inputValuesFive, setInputValuesFive] = useState<string[]>(
         Array(5).fill("")
     );
+    const [invalidInputs, setInvalidInputs] = useState<{
+        [key: string]: boolean;
+    }>({});
 
     const inputRefsOne = useRef<(HTMLInputElement | null)[]>(
         Array(5).fill(null)
@@ -40,23 +42,34 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
     );
 
     const handleSave = () => {
-        const isValidInput = [
+        const allInputs = [
             inputValuesOne,
             inputValuesTwo,
             inputValuesThree,
             inputValuesFour,
             inputValuesFive,
-        ].every((inputValues) => {
-            return inputValues.every((value) => value && value.trim() !== "");
+        ];
+
+        const newInvalidInputs: { [key: string]: boolean } = {};
+
+        allInputs.forEach((inputValues, rowIndex) => {
+            inputValues.forEach((value, colIndex) => {
+                if (!value || value.trim() === "") {
+                    newInvalidInputs[`${rowIndex}-${colIndex}`] = true;
+                }
+            });
         });
 
+        setInvalidInputs(newInvalidInputs);
+
+        const isValidInput = Object.keys(newInvalidInputs).length === 0;
+
         if (isValidInput) {
-            alert(false);
+            alert("Inputs are valid!");
         } else {
             alert(true);
         }
     };
-    console.log(handleSave);
 
     const handleChange = (
         index: number,
@@ -81,6 +94,15 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
 
             return newInputValues;
         });
+
+        const key = `${inputRefs.current?.indexOf(
+            inputRefs.current[index]
+        )}-${index}`;
+        setInvalidInputs((prev) => {
+            const newInvalidInputs = { ...prev };
+            delete newInvalidInputs[key];
+            return newInvalidInputs;
+        });
     };
 
     return (
@@ -99,58 +121,67 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
                                 inputValuesThree,
                                 inputValuesFour,
                                 inputValuesFive,
-                            ].map((inputValues, idx) => (
-                                <div key={`group-${idx}`}>
-                                    {inputValues.map((value, index) => (
-                                        <input
-                                            key={`input-${idx}-${index}`}
-                                            type="text"
-                                            value={value}
-                                            maxLength={1}
-                                            ref={(el) => {
-                                                if (idx === 0)
-                                                    inputRefsOne.current[
-                                                        index
-                                                    ] = el;
-                                                else if (idx === 1)
-                                                    inputRefsTwo.current[
-                                                        index
-                                                    ] = el;
-                                                else if (idx === 2)
-                                                    inputRefsThree.current[
-                                                        index
-                                                    ] = el;
-                                                else if (idx === 3)
-                                                    inputRefsFour.current[
-                                                        index
-                                                    ] = el;
-                                                else if (idx === 4)
-                                                    inputRefsFive.current[
-                                                        index
-                                                    ] = el;
-                                            }}
-                                            onChange={(e) =>
-                                                handleChange(
-                                                    index,
-                                                    e.target.value,
-                                                    [
-                                                        setInputValuesOne,
-                                                        setInputValuesTwo,
-                                                        setInputValuesThree,
-                                                        setInputValuesFour,
-                                                        setInputValuesFive,
-                                                    ][idx],
-                                                    [
-                                                        inputRefsOne,
-                                                        inputRefsTwo,
-                                                        inputRefsThree,
-                                                        inputRefsFour,
-                                                        inputRefsFive,
-                                                    ][idx]
-                                                )
-                                            }
-                                        />
-                                    ))}
+                            ].map((inputValues, rowIndex) => (
+                                <div key={`group-${rowIndex}`}>
+                                    {inputValues.map((value, colIndex) => {
+                                        const key = `${rowIndex}-${colIndex}`;
+                                        return (
+                                            <input
+                                                key={`input-${rowIndex}-${colIndex}`}
+                                                type="text"
+                                                value={value}
+                                                maxLength={1}
+                                                style={{
+                                                    backgroundColor:
+                                                        invalidInputs[key]
+                                                            ? "white"
+                                                            : "green",
+                                                }}
+                                                ref={(el) => {
+                                                    if (rowIndex === 0)
+                                                        inputRefsOne.current[
+                                                            colIndex
+                                                        ] = el;
+                                                    else if (rowIndex === 1)
+                                                        inputRefsTwo.current[
+                                                            colIndex
+                                                        ] = el;
+                                                    else if (rowIndex === 2)
+                                                        inputRefsThree.current[
+                                                            colIndex
+                                                        ] = el;
+                                                    else if (rowIndex === 3)
+                                                        inputRefsFour.current[
+                                                            colIndex
+                                                        ] = el;
+                                                    else if (rowIndex === 4)
+                                                        inputRefsFive.current[
+                                                            colIndex
+                                                        ] = el;
+                                                }}
+                                                onChange={(e) =>
+                                                    handleChange(
+                                                        colIndex,
+                                                        e.target.value,
+                                                        [
+                                                            setInputValuesOne,
+                                                            setInputValuesTwo,
+                                                            setInputValuesThree,
+                                                            setInputValuesFour,
+                                                            setInputValuesFive,
+                                                        ][rowIndex],
+                                                        [
+                                                            inputRefsOne,
+                                                            inputRefsTwo,
+                                                            inputRefsThree,
+                                                            inputRefsFour,
+                                                            inputRefsFive,
+                                                        ][rowIndex]
+                                                    )
+                                                }
+                                            />
+                                        );
+                                    })}
                                 </div>
                             ))}
                         </div>
