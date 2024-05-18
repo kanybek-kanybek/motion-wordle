@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import "../components/block.css";
+import Keyboard from "./Keyboard/Keyboard";
 
 interface BoardProps {
     tile: string;
@@ -22,12 +23,14 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
     const [inputValuesFive, setInputValuesFive] = useState<string[]>(
         Array(5).fill("")
     );
+    const [inputColors, setInputColors] = useState<string[][]>(
+        Array(5).fill(Array(5).fill("white"))
+    );
     const [invalidInputs, setInvalidInputs] = useState<{
         [key: string]: boolean;
     }>({});
-    const [alertStatus, setAlertStatus] = useState<{
-        [key: string]: boolean;
-    }>({}); // Жаңы абал
+    const [currentRow, setCurrentRow] = useState<number>(0);
+    const [currentCol, setCurrentCol] = useState<number>(0);
 
     const inputRefsOne = useRef<(HTMLInputElement | null)[]>(
         Array(5).fill(null)
@@ -45,39 +48,78 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         Array(5).fill(null)
     );
 
-    const handleSave = () => {
-        const allInputs = [
-            inputValuesOne,
-            inputValuesTwo,
-            inputValuesThree,
-            inputValuesFour,
-            inputValuesFive,
-        ];
+    const allInputValues = [
+        inputValuesOne,
+        inputValuesTwo,
+        inputValuesThree,
+        inputValuesFour,
+        inputValuesFive,
+    ];
 
+    const setInputValuesFunctions = [
+        setInputValuesOne,
+        setInputValuesTwo,
+        setInputValuesThree,
+        setInputValuesFour,
+        setInputValuesFive,
+    ];
+
+    const inputRefs = [
+        inputRefsOne,
+        inputRefsTwo,
+        inputRefsThree,
+        inputRefsFour,
+        inputRefsFive,
+    ];
+
+    const handleSave = () => {
+        const newColors = inputColors.slice();
         const newInvalidInputs: { [key: string]: boolean } = {};
-        const newAlertStatus: { [key: string]: boolean } = {};
 
         let anyCorrect = false;
 
-        allInputs.forEach((inputValues, rowIndex) => {
+        allInputValues.forEach((inputValues, rowIndex) => {
             let rowString = inputValues.join("");
-            let isRowCorrect = rowString === tile;
+            let tileChars = tile.split("");
+            let inputColorsRow = Array(5).fill("white");
 
             inputValues.forEach((value, colIndex) => {
                 if (!value || value.trim() === "") {
                     newInvalidInputs[`${rowIndex}-${colIndex}`] = true;
                 } else {
-                    newAlertStatus[`${rowIndex}-${colIndex}`] = isRowCorrect;
-                    if (isRowCorrect) {
-                        anyCorrect = true;
+                    if (value === tile[colIndex]) {
+                        inputColorsRow[colIndex] = "green";
+                        tileChars[colIndex] = "";
                     }
                 }
             });
+
+            inputValues.forEach((value, colIndex) => {
+                if (
+                    value &&
+                    value !== tile[colIndex] &&
+                    tileChars.includes(value)
+                ) {
+                    inputColorsRow[colIndex] = "yellow";
+                    tileChars[tileChars.indexOf(value)] = "";
+                }
+            });
+
+            newColors[rowIndex] = inputColorsRow;
+
+            if (rowString === tile) {
+                anyCorrect = true;
+            }
         });
 
         setInvalidInputs(newInvalidInputs);
-        setAlertStatus(newAlertStatus);
-        alert(anyCorrect);
+        setInputColors(newColors);
+
+        if (anyCorrect) {
+            alert("Сиз жеңдиңиз!");
+        } else if (currentRow === 4) {
+            alert("Сиз жеңбей калдыңыз, кайра ойноп көрүңүз.");
+        }
     };
 
     const handleChange = (
@@ -114,6 +156,36 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         });
     };
 
+    const handleKeyPress = (key: string) => {
+        const currentInputValues = allInputValues[currentRow];
+        const setCurrentInputValues = setInputValuesFunctions[currentRow];
+        const currentInputRefs = inputRefs[currentRow];
+
+        if (key === "BACKSPACE") {
+            const newValues = [...currentInputValues];
+            newValues[currentCol - 1] = "";
+            setCurrentInputValues(newValues);
+            setCurrentCol(Math.max(0, currentCol - 1));
+            if (currentInputRefs.current[currentCol - 1]) {
+                currentInputRefs.current[currentCol - 1]?.focus();
+            }
+        } else if (key === "ENTER") {
+            if (currentCol === 5) {
+                handleSave();
+                setCurrentRow((prev) => prev + 1);
+                setCurrentCol(0);
+            }
+        } else if (currentCol < 5) {
+            const newValues = [...currentInputValues];
+            newValues[currentCol] = key;
+            setCurrentInputValues(newValues);
+            setCurrentCol(currentCol + 1);
+            if (currentInputRefs.current[currentCol]) {
+                currentInputRefs.current[currentCol]?.focus();
+            }
+        }
+    };
+
     return (
         <div id="cube">
             <div className="container">
@@ -121,23 +193,12 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
                 <div className="block">
                     <div className="block__content">
                         <div className="block__content__inputs">
-                            {[
-                                inputValuesOne,
-                                inputValuesTwo,
-                                inputValuesThree,
-                                inputValuesFour,
-                                inputValuesFive,
-                            ].map((inputValues, rowIndex) => (
+                            {allInputValues.map((inputValues, rowIndex) => (
                                 <div key={`group-${rowIndex}`}>
                                     {inputValues.map((value, colIndex) => {
                                         const key = `${rowIndex}-${colIndex}`;
-                                        let backgroundColor = "white";
-
-                                        if (alertStatus[key] !== undefined) {
-                                            backgroundColor = alertStatus[key]
-                                                ? "green"
-                                                : "rgb(163, 162, 162)";
-                                        }
+                                        const backgroundColor =
+                                            inputColors[rowIndex][colIndex];
 
                                         return (
                                             <input
@@ -146,45 +207,18 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
                                                 value={value}
                                                 maxLength={1}
                                                 ref={(el) => {
-                                                    if (rowIndex === 0)
-                                                        inputRefsOne.current[
-                                                            colIndex
-                                                        ] = el;
-                                                    else if (rowIndex === 1)
-                                                        inputRefsTwo.current[
-                                                            colIndex
-                                                        ] = el;
-                                                    else if (rowIndex === 2)
-                                                        inputRefsThree.current[
-                                                            colIndex
-                                                        ] = el;
-                                                    else if (rowIndex === 3)
-                                                        inputRefsFour.current[
-                                                            colIndex
-                                                        ] = el;
-                                                    else if (rowIndex === 4)
-                                                        inputRefsFive.current[
-                                                            colIndex
-                                                        ] = el;
+                                                    inputRefs[rowIndex].current[
+                                                        colIndex
+                                                    ] = el;
                                                 }}
                                                 onChange={(e) =>
                                                     handleChange(
                                                         colIndex,
                                                         e.target.value,
-                                                        [
-                                                            setInputValuesOne,
-                                                            setInputValuesTwo,
-                                                            setInputValuesThree,
-                                                            setInputValuesFour,
-                                                            setInputValuesFive,
-                                                        ][rowIndex],
-                                                        [
-                                                            inputRefsOne,
-                                                            inputRefsTwo,
-                                                            inputRefsThree,
-                                                            inputRefsFour,
-                                                            inputRefsFive,
-                                                        ][rowIndex]
+                                                        setInputValuesFunctions[
+                                                            rowIndex
+                                                        ],
+                                                        inputRefs[rowIndex]
                                                     )
                                                 }
                                                 style={{ backgroundColor }}
@@ -201,6 +235,7 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
                     </div>
                 </div>
 
+                <Keyboard onKeyPress={handleKeyPress} />
                 <button
                     style={{
                         padding: "18px 40px",
