@@ -1,11 +1,12 @@
 import React, { useState, useRef } from "react";
 import "../components/block.css";
+
 interface BoardProps {
-    tiles: string[];
-    onTileChange: (index: number, value: string) => void;
+    tile: string;
+    loading: boolean;
 }
 
-const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
+const Block: React.FC<BoardProps> = ({ tile, loading }) => {
     const [inputValuesOne, setInputValuesOne] = useState<string[]>(
         Array(5).fill("")
     );
@@ -24,6 +25,9 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
     const [invalidInputs, setInvalidInputs] = useState<{
         [key: string]: boolean;
     }>({});
+    const [alertStatus, setAlertStatus] = useState<{
+        [key: string]: boolean;
+    }>({}); // Жаңы абал
 
     const inputRefsOne = useRef<(HTMLInputElement | null)[]>(
         Array(5).fill(null)
@@ -51,24 +55,29 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
         ];
 
         const newInvalidInputs: { [key: string]: boolean } = {};
+        const newAlertStatus: { [key: string]: boolean } = {};
+
+        let anyCorrect = false;
 
         allInputs.forEach((inputValues, rowIndex) => {
+            let rowString = inputValues.join("");
+            let isRowCorrect = rowString === tile;
+
             inputValues.forEach((value, colIndex) => {
                 if (!value || value.trim() === "") {
                     newInvalidInputs[`${rowIndex}-${colIndex}`] = true;
+                } else {
+                    newAlertStatus[`${rowIndex}-${colIndex}`] = isRowCorrect;
+                    if (isRowCorrect) {
+                        anyCorrect = true;
+                    }
                 }
             });
         });
 
         setInvalidInputs(newInvalidInputs);
-
-        const isValidInput = Object.keys(newInvalidInputs).length === 0;
-
-        if (isValidInput) {
-            alert("Inputs are valid!");
-        } else {
-            alert(true);
-        }
+        setAlertStatus(newAlertStatus);
+        alert(anyCorrect);
     };
 
     const handleChange = (
@@ -108,10 +117,7 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
     return (
         <div id="cube">
             <div className="container">
-                {tiles.map((tile, idx) => (
-                    <h1 key={idx}>{tile}</h1>
-                ))}
-
+                <h1>{tile}</h1>
                 <div className="block">
                     <div className="block__content">
                         <div className="block__content__inputs">
@@ -125,18 +131,20 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
                                 <div key={`group-${rowIndex}`}>
                                     {inputValues.map((value, colIndex) => {
                                         const key = `${rowIndex}-${colIndex}`;
+                                        let backgroundColor = "white";
+
+                                        if (alertStatus[key] !== undefined) {
+                                            backgroundColor = alertStatus[key]
+                                                ? "green"
+                                                : "rgb(163, 162, 162)";
+                                        }
+
                                         return (
                                             <input
                                                 key={`input-${rowIndex}-${colIndex}`}
                                                 type="text"
                                                 value={value}
                                                 maxLength={1}
-                                                style={{
-                                                    backgroundColor:
-                                                        invalidInputs[key]
-                                                            ? "white"
-                                                            : "green",
-                                                }}
                                                 ref={(el) => {
                                                     if (rowIndex === 0)
                                                         inputRefsOne.current[
@@ -179,6 +187,7 @@ const Block: React.FC<BoardProps> = ({ tiles, onTileChange }) => {
                                                         ][rowIndex]
                                                     )
                                                 }
+                                                style={{ backgroundColor }}
                                             />
                                         );
                                     })}
