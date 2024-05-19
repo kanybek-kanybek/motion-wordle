@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import "../components/block.css";
 import Keyboard from "./Keyboard/Keyboard";
-import { BsArrowClockwise } from "react-icons/bs";
+
 interface BoardProps {
     tile: string;
     loading: boolean;
@@ -46,51 +46,50 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         setCurrentCol(0);
     };
 
-    const handleSave = () => {
+    const handleEnterPress = () => {
         const newColors = inputColors.slice();
         const newInvalidInputs: { [key: string]: boolean } = {};
-
         let anyCorrect = false;
 
-        inputValues.forEach((inputRow, rowIndex) => {
-            let rowString = inputRow.join("");
-            let tileChars = tile.split("");
-            let inputColorsRow = Array(5).fill("white");
+        let rowString = inputValues[currentRow].join("");
+        let tileChars = tile.split("");
+        let inputColorsRow = Array(5).fill("white");
 
-            inputRow.forEach((value, colIndex) => {
-                if (!value || value.trim() === "") {
-                    newInvalidInputs[`${rowIndex}-${colIndex}`] = true;
-                } else {
-                    if (value === tile[colIndex]) {
-                        inputColorsRow[colIndex] = "green";
-                        tileChars[colIndex] = "";
-                    }
+        // First pass to mark greens
+        inputValues[currentRow].forEach((value, colIndex) => {
+            if (!value || value.trim() === "") {
+                newInvalidInputs[`${currentRow}-${colIndex}`] = true;
+            } else {
+                if (value === tile[colIndex]) {
+                    inputColorsRow[colIndex] = "green";
+                    tileChars[colIndex] = "";
                 }
-            });
-
-            inputRow.forEach((value, colIndex) => {
-                if (
-                    value &&
-                    value !== tile[colIndex] &&
-                    tileChars.includes(value)
-                ) {
-                    inputColorsRow[colIndex] = "yellow";
-                    tileChars[tileChars.indexOf(value)] = "";
-                }
-            });
-
-            newColors[rowIndex] = inputColorsRow;
-
-            if (rowString === tile) {
-                anyCorrect = true;
             }
         });
+
+        // Second pass to mark yellows
+        inputValues[currentRow].forEach((value, colIndex) => {
+            if (
+                value &&
+                value !== tile[colIndex] &&
+                tileChars.includes(value)
+            ) {
+                inputColorsRow[colIndex] = "yellow";
+                tileChars[tileChars.indexOf(value)] = "";
+            }
+        });
+
+        newColors[currentRow] = inputColorsRow;
+
+        if (rowString === tile) {
+            anyCorrect = true;
+        }
 
         setInvalidInputs(newInvalidInputs);
         setInputColors(newColors);
 
         if (anyCorrect) {
-            alert("Сиз жеңдиңиз!Куттуктаймын!");
+            alert("Сиз жеңдиңиз!");
             resetGame();
         } else if (currentRow === 4) {
             alert(
@@ -100,6 +99,9 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         } else {
             setCurrentRow(currentRow + 1);
             setCurrentCol(0);
+            if (inputRefs.current[currentRow + 1][0]) {
+                inputRefs.current[currentRow + 1][0]?.focus();
+            }
         }
     };
 
@@ -142,11 +144,16 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         if (key === "BACKSPACE") {
             if (currentCol > 0) {
                 handleChange(currentRow, currentCol - 1, "");
+            } else if (currentCol === 0 && currentRow > 0) {
+                const prevRowLastCol = inputRefs.current[currentRow - 1][4];
+                if (prevRowLastCol) {
+                    setCurrentRow(currentRow - 1);
+                    setCurrentCol(4);
+                    prevRowLastCol.focus();
+                }
             }
         } else if (key === "ENTER") {
-            if (currentCol === 5) {
-                handleSave();
-            }
+            handleEnterPress();
         } else if (currentCol < 5) {
             handleChange(currentRow, currentCol, key);
         }
@@ -155,18 +162,6 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
     return (
         <div id="cube">
             <div className="container">
-                <button
-                    style={{
-                        padding: "18px 40px",
-                        borderRadius: "15px",
-                        marginLeft: "590px",
-                        display: "flex",
-                        marginTop: "20px",
-                    }}
-                    onClick={resetGame}
-                >
-                    <BsArrowClockwise />
-                </button>
                 <div className="block">
                     <div className="block__content">
                         <div className="block__content__inputs">
@@ -209,18 +204,6 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
                 </div>
 
                 <Keyboard onKeyPress={handleKeyPress} />
-                <button
-                    style={{
-                        padding: "18px 40px",
-                        borderRadius: "15px",
-                        marginLeft: "590px",
-                        display: "flex",
-                        marginTop: "20px",
-                    }}
-                    onClick={handleSave}
-                >
-                    Save
-                </button>
             </div>
         </div>
     );
