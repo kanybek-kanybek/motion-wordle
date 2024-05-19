@@ -3,10 +3,13 @@ import "./App.css";
 import Block from "./components/block";
 
 export default function App() {
-    const [tiles, setTiles] = useState<string[]>(Array(30).fill(""));
+    const [tile, setTile] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchRandomWord = async () => {
+            setLoading(true);
+
             try {
                 const response = await fetch(
                     "https://piccolo-server.vercel.app/words"
@@ -17,32 +20,20 @@ export default function App() {
                     Math.random() * words.length
                 );
                 const randomWord: string = words[randomIndex];
-                updateTiles(randomWord);
+                setTile(randomWord);
+                setLoading(false);
             } catch (error) {
                 console.error("Error fetching random word:", error);
+                setLoading(false);
             }
         };
 
         fetchRandomWord();
     }, []);
 
-    const updateTiles = (word: string) => {
-        const newTiles: string[] = [
-            ...word.toUpperCase().split(""),
-            ...Array(30 - word.length).fill(""),
-        ];
-        setTiles(newTiles);
-    };
-
-    const handleTileChange = (index: number, value: string) => {
-        const newTiles: string[] = [...tiles];
-        newTiles[index] = value.toUpperCase();
-        setTiles(newTiles);
-    };
-
     return (
         <div className="App">
-            <Block tiles={tiles} onTileChange={handleTileChange} />
+            <Block tile={tile} loading={loading} />
         </div>
     );
 }
