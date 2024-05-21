@@ -55,7 +55,6 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         let tileChars = tile.split("");
         let inputColorsRow = Array(5).fill("white");
 
-        // First pass to mark greens
         inputValues[currentRow].forEach((value, colIndex) => {
             if (!value || value.trim() === "") {
                 newInvalidInputs[`${currentRow}-${colIndex}`] = true;
@@ -67,7 +66,6 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
             }
         });
 
-        // Second pass to mark yellows
         inputValues[currentRow].forEach((value, colIndex) => {
             if (
                 value &&
@@ -89,7 +87,7 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         setInputColors(newColors);
 
         if (anyCorrect) {
-            alert("Сиз жеңдиңиз!");
+            alert("Сиз жеңдиңиз!Куттуктаймын!");
             resetGame();
         } else if (currentRow === 4) {
             alert(
@@ -110,10 +108,14 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
         colIndex: number,
         value: string
     ) => {
+        if (rowIndex !== currentRow) return;
+
+        if (!/^[a-zA-Z]$/.test(value) && value !== "") return;
+
         setInputValues((prevValues) => {
             const newValues = prevValues.map((row, i) =>
                 row.map((col, j) =>
-                    i === rowIndex && j === colIndex ? value : col
+                    i === rowIndex && j === colIndex ? value.toUpperCase() : col
                 )
             );
 
@@ -173,6 +175,7 @@ const Block: React.FC<BoardProps> = ({ tile, loading }) => {
                                             type="text"
                                             value={value}
                                             maxLength={1}
+                                            readOnly={rowIndex < currentRow}
                                             ref={(el) => {
                                                 inputRefs.current[rowIndex][
                                                     colIndex
